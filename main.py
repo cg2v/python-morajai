@@ -8,6 +8,7 @@ def trading_board() -> Board:
     board.set_space(2, 0, BoardSpaceColors.YELLOW)
     board.set_space(1, 1, BoardSpaceColors.YELLOW)
     board.set_space(2, 1, BoardSpaceColors.YELLOW)
+    assert repr(board) == "P E E\nE Y Y\nE Y Y"
     return board
 
 def tunnel_board() -> Board:
@@ -21,6 +22,21 @@ def tunnel_board() -> Board:
     board.set_space(2, 0, BoardSpaceColors.ORANGE)
     board.set_space(2, 1, BoardSpaceColors.ORANGE)
     board.set_space(2, 2, BoardSpaceColors.PINK)
+    assert repr(board) == "K O P\nO O O\nP O O"
+    return board
+
+def solarium_board() -> Board:
+    board = Board()
+    board.set_space(0, 0, BoardSpaceColors.YELLOW)
+    board.set_space(0, 1, BoardSpaceColors.GREEN)
+    board.set_space(0, 2, BoardSpaceColors.GREEN)
+    board.set_space(1, 0, BoardSpaceColors.GRAY)
+    board.set_space(1, 1, BoardSpaceColors.YELLOW)
+    board.set_space(1, 2, BoardSpaceColors.GRAY)
+    board.set_space(2, 0, BoardSpaceColors.GREEN)
+    board.set_space(2, 1, BoardSpaceColors.GREEN)
+    board.set_space(2, 2, BoardSpaceColors.YELLOW)
+    assert repr(board) == "G E Y\nG Y G\nY E G"
     return board
 
 def generate_goal(color: BoardSpaceColors) -> Board:
@@ -32,8 +48,8 @@ def generate_goal(color: BoardSpaceColors) -> Board:
     return board
 
 def main():
-    initial_board = tunnel_board()
-    goal_board = generate_goal(BoardSpaceColors.ORANGE)
+    initial_board = solarium_board()
+    goal_board = generate_goal(BoardSpaceColors.GREEN)
 
     print("Initial Board:")
     print(initial_board)
@@ -41,7 +57,7 @@ def main():
     print(goal_board)
 
     start_node = GameNode(initial_board)
-    goal_node = GameNode(goal_board, corner_color=BoardSpaceColors.ORANGE)
+    goal_node = GameNode(goal_board, corner_color=BoardSpaceColors.GREEN)
 
     search = GameSearch()
     path = search.astar(start_node, goal_node)
