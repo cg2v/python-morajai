@@ -108,9 +108,8 @@ class BoardBase(ABC):
         if not isinstance(other, BoardBase):
             return NotImplemented
         return not self == other
-    
-    def __hash__(self) -> int:
-        return hash(tuple(self.get_space(row, col) for row in range(3) for col in range(3)))
+
+    __hash__ = None  # Make unhashable by default #type: ignore
 
 class CompactBoard(BoardBase):
     spaces: tuple[int, ...]
@@ -121,7 +120,25 @@ class CompactBoard(BoardBase):
         if 0 <= x < 3 and 0 <= y < 3:
             return BoardSpaceColors(self.spaces[x * 3 + y])
         raise CoordinateError("Invalid board coordinates")
-        
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BoardBase):
+            return NotImplemented
+        if isinstance(other, CompactBoard):
+            return self.spaces == other.spaces
+        # Fall back to BoardBase equality check for other board types.
+        return super().__eq__(other)
+
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, BoardBase):
+            return NotImplemented
+        if isinstance(other, CompactBoard):
+            return self.spaces != other.spaces
+        # Fall back to BoardBase equality check for other board types.
+        return super().__ne__(other)
+
+    def __hash__(self) -> int:
+        return hash(self.spaces)
 
 class Board(BoardBase):
     spaces: list[list[BoardSpaceColors]]
