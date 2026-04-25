@@ -59,17 +59,39 @@ def press_violet(data: board.BoardBase, coord: tuple[int, int]) -> board.BoardBa
         new_board.set_space(x, y - 1, temp)
     return new_board
 
+def _orthogonal_neighbors(x: int, y: int):
+    for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            yield (nx, ny)
+
 def press_white(data: board.BoardBase, coord: tuple[int, int]) -> board.BoardBase:
-    """Sets all surrounding gray tiles to white. If there are none, sets itself to gray"""
-    data = data.copy()
-    adjacent = data.get_surrounding_spaces(coord)
-    for i, color in enumerate(adjacent):
-        if color == board.BoardSpaceColors.GRAY:
-            adjacent[i] = board.BoardSpaceColors.WHITE
-    data.set_surrounding_spaces(coord, adjacent)
-    if all(color != board.BoardSpaceColors.WHITE for color in adjacent):
-        data.set_space(*coord, board.BoardSpaceColors.GRAY)
-    return data
+    """Turns itself and orthogonally-linked white tiles grey; grey tiles orthogonally-adjacent to those become white."""
+    pressed_color = data.get_space(*coord)
+    # BFS flood-fill to collect all orthogonally-linked tiles of the same color
+    group: set[tuple[int, int]] = set()
+    queue = [coord]
+    while queue:
+        cur = queue.pop()
+        if cur in group:
+            continue
+        if data.get_space(*cur) == pressed_color:
+            group.add(cur)
+            for neighbor in _orthogonal_neighbors(*cur):
+                if neighbor not in group:
+                    queue.append(neighbor)
+    # Collect orthogonal gray neighbors of the group (from original board)
+    gray_neighbors: set[tuple[int, int]] = set()
+    for tile in group:
+        for neighbor in _orthogonal_neighbors(*tile):
+            if neighbor not in group and data.get_space(*neighbor) == board.BoardSpaceColors.GRAY:
+                gray_neighbors.add(neighbor)
+    new_board = data.copy()
+    for tile in group:
+        new_board.set_space(*tile, board.BoardSpaceColors.GRAY)
+    for tile in gray_neighbors:
+        new_board.set_space(*tile, pressed_color)
+    return new_board
 
 def press_red(data: board.BoardBase, _: tuple[int, int]) -> board.BoardBase:
     new_board = data.copy()
