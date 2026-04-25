@@ -1,3 +1,5 @@
+import argparse
+
 from morajai.board import BoardSpaceColors, Board
 from morajai.astarsupport import GameNode, GameSearch
 
@@ -200,20 +202,68 @@ def generate_goal(color: BoardSpaceColors) -> Board:
     board.set_space(2, 2, color)
     return board
 
-def main():
-    initial_board = solarium_board()
-    goal_board = generate_goal(BoardSpaceColors.GREEN)
+def get_board_catalog():
+    return {
+        "trading": (trading_board, BoardSpaceColors.YELLOW),
+        "tunnel": (tunnel_board, BoardSpaceColors.ORANGE),
+        "solarium": (solarium_board, BoardSpaceColors.GREEN),
+        "master-bedroom": (master_bedroom_board, BoardSpaceColors.WHITE),
+        "closed-exhibit": (closed_exhibit_board, BoardSpaceColors.RED),
+        "throne": (throne_board, BoardSpaceColors.BLUE),
+        "lost-and-found": (lost_and_found_board, BoardSpaceColors.PINK),
+        "tomb": (tomb_board, BoardSpaceColors.VIOLET),
+        "sanctum-orinda-aries": (sanctum_orinda_aries_board, BoardSpaceColors.BLACK),
+        "sanctum-fenn-aries": (sanctum_fenn_aries_board, BoardSpaceColors.RED),
+        "sanctum-arch-aries": (sanctum_arch_aries_board, BoardSpaceColors.YELLOW),
+        "sanctum-eraja": (sanctum_eraja_board, BoardSpaceColors.VIOLET),
+        "sanctum-corarica": (sanctum_corarica_board, BoardSpaceColors.ORANGE),
+        "sanctum-mora-jai": (sanctum_mora_jai_board, BoardSpaceColors.WHITE),
+        "sanctum-verra": (sanctum_verra_board, BoardSpaceColors.PINK),
+        "sanctum-nuance": (sanctum_nuance_board, BoardSpaceColors.GREEN),
+    }
+
+def solve(initial_board: Board, goal_color: BoardSpaceColors):
+    goal_board = generate_goal(goal_color)
+
+    start_node = GameNode(initial_board)
+    goal_node = GameNode(goal_board, corner_color=goal_color)
+
+    search = GameSearch()
+    path = search.astar(start_node, goal_node)
+    return path, goal_board
+
+def verify_all() -> int:
+    board_catalog = get_board_catalog()
+    for board_name, (board_fn, goal_color) in board_catalog.items():
+        initial_board = board_fn()
+        path, _ = solve(initial_board, goal_color)
+        if not path:
+            print(f"FAIL: {board_name}")
+            return 1
+    print("PASS")
+    return 0
+
+def main() -> int:
+    board_catalog = get_board_catalog()
+    parser = argparse.ArgumentParser(description="Blue Prince Game Solver")
+    parser.add_argument("--board", type=str, help="Name of the board to solve",
+                        choices=board_catalog.keys(), default="solarium")
+    parser.add_argument("--verify-all", action="store_true", help="Verify all boards")
+    args = parser.parse_args()
+
+    if args.verify_all:
+        return verify_all()
+
+    board_name = args.board
+
+    board_fn, goal_color = board_catalog[board_name]
+    initial_board = board_fn()
+    path, goal_board = solve(initial_board, goal_color)
 
     print("Initial Board:")
     print(initial_board)
     print("\nGoal Board:")
     print(goal_board)
-
-    start_node = GameNode(initial_board)
-    goal_node = GameNode(goal_board, corner_color=BoardSpaceColors.GREEN)
-
-    search = GameSearch()
-    path = search.astar(start_node, goal_node)
 
     if path:
         print("\nSolution found:")
@@ -222,8 +272,10 @@ def main():
             if node.press_position and node.press_color:
                 print(f"Press at {node.press_position} ({3 * node.press_position[1] + node.press_position[0] + 1}) with color {node.press_color.name}")
             print(node.board)
+        return 0
     else:
         print("\nNo solution found.")
+        return 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
