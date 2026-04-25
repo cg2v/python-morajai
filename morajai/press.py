@@ -72,15 +72,15 @@ def press_white(data: board.BoardBase, coord: tuple[int, int]) -> board.BoardBas
     return data
 
 def press_red(data: board.BoardBase, _: tuple[int, int]) -> board.BoardBase:
-    data = data.copy()
+    new_board = data.copy()
     for i in range(3):
         for j in range(3):
             current = data.get_space(i, j)
-            if current == board.BoardSpaceColors.RED:
-                data.set_space(i, j, board.BoardSpaceColors.BLACK)
+            if current == board.BoardSpaceColors.WHITE:
+                new_board.set_space(i, j, board.BoardSpaceColors.BLACK)
             elif current == board.BoardSpaceColors.BLACK:
-                data.set_space(i, j, board.BoardSpaceColors.RED)
-    return data
+                new_board.set_space(i, j, board.BoardSpaceColors.RED)
+    return new_board
 
 def press_orange(data: board.BoardBase, coord: tuple[int, int]) -> board.BoardBase:
     """Set orange tile to most common adjacent color if it is a majority"""
